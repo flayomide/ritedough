@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rite Dough Bread · Supply Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:           #F7F5F2;
+      --surface:      #FFFFFF;
+      --border:       #E4DDD5;
+      --text:         #1C1A18;
+      --muted:        #938D87;
+      --accent:       #7C4F2A;
+      --accent-light: #F3EAE1;
+      --accent-mid:   #A86A3A;
+      --green:        #2D7A50;
+      --green-light:  #E6F4ED;
+      --red:          #B83232;
+      --red-light:    #FBEAEA;
+      --shadow-sm:    0 1px 4px rgba(0,0,0,0.06);
+      --shadow-md:    0 3px 14px rgba(0,0,0,0.08);
+      --radius:       14px;
+      --radius-sm:    10px;
+    }
+
+    html, body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ─── LAYOUT ─── */
+    .app-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      background: var(--accent);
+      color: #fff;
+      padding: 18px 20px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-eyebrow {
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 3px;
+    }
+    .header-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1.5px solid var(--border);
+      position: sticky;
+      top: 64px;
+      z-index: 99;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 11px 6px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2.5px solid transparent;
+      cursor: pointer;
+      transition: color 0.18s, border-color 0.18s;
+      letter-spacing: 0.01em;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ─── PAGES ─── */
+    .page { display: none; padding: 14px 14px 100px; flex: 1; }
+    .page.active { display: block; }
+
+    /* ─── SECTION LABEL ─── */
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 9px;
+    }
+
+    /* ─── DATE BAR ─── */
+    .date-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .date-main { font-size: 15px; font-weight: 700; line-height: 1.2; }
+    .date-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+    .btn:active { opacity: 0.78; transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; padding: 10px 17px; font-size: 13px; }
+    .btn-ghost   { background: none; color: var(--muted); border: 1.5px solid var(--border); padding: 10px 16px; font-size: 13px; }
+    .btn-green   { background: var(--green-light); color: var(--green); padding: 10px; font-size: 13px; flex: 1; }
+    .btn-red     { background: var(--red-light); color: var(--red); padding: 10px 13px; font-size: 13px; }
+
+    /* ─── SUMMARY STRIP ─── */
+    .summary-strip {
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+    }
+    .summary-item {}
+    .summary-item-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 3px; }
+    .summary-item-value { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+
+    /* ─── ADD FORM ─── */
+    .add-form {
+      background: var(--surface);
+      border: 1.5px dashed var(--accent-mid);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .add-form.open { display: block; }
+    .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); display: block; margin-bottom: 7px; }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s;
+      margin-bottom: 14px;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: flex; gap: 8px; }
+
+    /* ─── CUSTOMER CARD ─── */
+    .cust-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .cust-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 15px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cust-name  { font-size: 15px; font-weight: 700; }
+    .cust-total { font-size: 17px; font-weight: 700; color: var(--accent); }
+
+    /* product 3-col grid */
+    .prod-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .prod-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 11px 4px 10px;
+      border-right: 1px solid var(--border);
+    }
+    .prod-col:last-child { border-right: none; }
+    .prod-name  { font-size: 10px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 7px; }
+    .qty-row    { display: flex; align-items: center; gap: 7px; }
+    .qty-btn    {
+      width: 29px; height: 29px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      font-size: 17px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 400;
+      transition: all 0.13s;
+    }
+    .qty-btn:active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+    .qty-val    { font-size: 17px; font-weight: 700; min-width: 22px; text-align: center; }
+    .prod-cost  { font-size: 11.5px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+    /* cost breakdown */
+    .cost-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .cost-cell {
+      padding: 7px 4px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .cost-cell:last-child { border-right: none; }
+    .cost-cell-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 2px; }
+    .cost-cell-val { font-size: 13px; font-weight: 600; }
+
+    /* card actions */
+    .cust-actions { display: flex; gap: 8px; padding: 10px 12px 12px; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty {
+      text-align: center;
+      padding: 48px 20px 32px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; }
+    .empty-text { font-size: 14px; line-height: 1.6; }
+
+    /* ─── DAY TOTAL ROW ─── */
+    .day-total-bar {
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      padding: 13px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
+      margin-bottom: 16px;
+    }
+    .day-total-lbl { font-size: 13px; font-weight: 500; opacity: 0.8; }
+    .day-total-val { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+
+    /* ─── DASHBOARD ─── */
+    .dash-section { margin-bottom: 22px; }
+    .big-stat {
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-md);
+    }
+    .big-stat-label { font-size: 12px; opacity: 0.65; margin-bottom: 6px; }
+    .big-stat-value { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+    .big-stat-sub   { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+
+    .tri-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .mini-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 10px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .mini-stat-val   { font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+    .mini-stat-label { font-size: 10.5px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.07em; }
+
+    .plain-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .plain-stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .plain-stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+
+    /* ─── HISTORY ─── */
+    .day-group-hdr {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin: 18px 0 9px;
+    }
+    .day-group-hdr:first-child { margin-top: 0; }
+    .hist-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 15px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .hist-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .hist-name { font-size: 14px; font-weight: 600; }
+    .hist-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .hist-amt  { font-size: 15px; font-weight: 700; color: var(--green); }
+    .pill-row  { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .day-paid-total {
+      background: var(--green-light);
+      border-radius: 9px;
+      padding: 9px 13px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .day-paid-total span { font-size: 12px; font-weight: 600; color: var(--green); }
+    .no-history { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+
+    /* ─── MODAL ─── */
+    .modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.38);
+      z-index: 200;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-bg.open { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 40px;
+      width: 100%; max-width: 480px;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .modal-body  { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; }
+    .modal-row   { display: flex; gap: 10px; }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: 88px; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: #1C1A18; color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 300;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-eyebrow">Witty Tasty Bakery</div>
+    <div class="header-title">Rite Dough Bread · Supply Tracker</div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="today">📋 Today</button>
+    <button class="tab-btn"        data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn"        data-tab="history">✅ Paid Log</button>
+  </nav>
+
+  <!-- ══════════════ TODAY ══════════════ -->
+  <section class="page active" id="tab-today">
+    <div class="date-bar">
+      <div>
+        <div class="date-main" id="lbl-date">—</div>
+        <div class="date-sub"  id="lbl-count">0 customers</div>
+      </div>
+      <button class="btn btn-primary" id="btn-add-cust">＋ Add Customer</button>
+    </div>
+
+    <!-- Summary strip -->
+    <div class="summary-strip">
+      <div class="summary-item">
+        <div class="summary-item-label">Total Owed</div>
+        <div class="summary-item-value" id="s-total">₦0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">Customers</div>
+        <div class="summary-item-value" id="s-custs">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">Sliced Loaves</div>
+        <div class="summary-item-value" id="s-slice">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-item-label">Med + Small</div>
+        <div class="summary-item-value" id="s-medsmall">0</div>
+      </div>
+    </div>
+
+    <!-- Add form -->
+    <div class="add-form" id="add-form">
+      <label class="form-label" for="inp-name">Customer Name</label>
+      <input class="form-input" id="inp-name" type="text" placeholder="e.g. Mama Ngozi" autocomplete="off" />
+      <div class="form-row">
+        <button class="btn btn-ghost" id="btn-cancel-add" style="flex:0">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-add" style="flex:1">Add Customer</button>
+      </div>
+    </div>
+
+    <!-- Customer list -->
+    <div id="cust-list"></div>
+  </section>
+
+  <!-- ══════════════ DASHBOARD ══════════════ -->
+  <section class="page" id="tab-dashboard">
+    <div class="dash-section">
+      <div class="section-label">Today's Outstanding</div>
+      <div class="big-stat">
+        <div class="big-stat-label">Total Amount Owed Today</div>
+        <div class="big-stat-value" id="d-today-amt">₦0</div>
+        <div class="big-stat-sub" id="d-today-sub">0 customers outstanding</div>
+      </div>
+      <div class="tri-row">
+        <div class="mini-stat"><div class="mini-stat-val" id="d-today-sl">0</div><div class="mini-stat-label">Sliced</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" id="d-today-md">0</div><div class="mini-stat-label">Medium</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" id="d-today-sm">0</div><div class="mini-stat-label">Small</div></div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-label">Accumulated (All Unpaid Days)</div>
+      <div class="plain-stat">
+        <div class="plain-stat-label">Total Outstanding Across All Days</div>
+        <div class="plain-stat-value" id="d-all-amt">₦0</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:5px;" id="d-all-sub">—</div>
+      </div>
+      <div class="tri-row">
+        <div class="mini-stat"><div class="mini-stat-val" id="d-all-sl">0</div><div class="mini-stat-label">Sliced</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" id="d-all-md">0</div><div class="mini-stat-label">Medium</div></div>
+        <div class="mini-stat"><div class="mini-stat-val" id="d-all-sm">0</div><div class="mini-stat-label">Small</div></div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div class="section-label">Recovered (Paid)</div>
+      <div class="plain-stat">
+        <div class="plain-stat-label">Total Amount Paid (All Time)</div>
+        <div class="plain-stat-value" id="d-paid-amt" style="color:var(--green)">₦0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ PAID LOG ══════════════ -->
+  <section class="page" id="tab-history">
+    <div id="hist-list"></div>
+  </section>
+
+</div><!-- end app-shell -->
+
+<!-- Confirm modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Confirm</div>
+    <div class="modal-body"  id="modal-body">Are you sure?</div>
+    <div class="modal-row">
+      <button class="btn btn-ghost" id="modal-cancel" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" id="modal-ok" style="flex:1">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONSTANTS & STORE
+══════════════════════════════════════════ */
+const PRICES   = { slice: 1500, medium: 550, small: 270 };
+const KEY_REC  = 'wtb_records';   // { "YYYY-MM-DD": [{id,name,slice,medium,small}] }
+const KEY_HIST = 'wtb_paid';      // [{id,name,date,slice,medium,small,total,paidAt}]
+
+let records     = {};
+let paidHistory = [];
+let pendingFn   = null;
+
+/* ══════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════ */
+function loadData() {
+  try { records     = JSON.parse(localStorage.getItem(KEY_REC))  || {}; } catch(e) { records = {}; }
+  try { paidHistory = JSON.parse(localStorage.getItem(KEY_HIST)) || []; } catch(e) { paidHistory = []; }
+}
+function saveData() {
+  localStorage.setItem(KEY_REC,  JSON.stringify(records));
+  localStorage.setItem(KEY_HIST, JSON.stringify(paidHistory));
+}
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-NG',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+function fmtShort(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-NG',{weekday:'short',month:'short',day:'numeric'});
+}
+function ngn(n) { return '₦' + Number(n).toLocaleString('en-NG'); }
+function total(c) { return (c.slice||0)*PRICES.slice + (c.medium||0)*PRICES.medium + (c.small||0)*PRICES.small; }
+function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+function showModal(title, body, onOk, okLabel='Confirm', okBg='') {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent  = body;
+  const ok = document.getElementById('modal-ok');
+  ok.textContent = okLabel;
+  ok.style.background = okBg || 'var(--accent)';
+  pendingFn = onOk;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  pendingFn = null;
+}
+document.getElementById('modal-ok').addEventListener('click', () => { if(pendingFn) pendingFn(); closeModal(); });
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-bg').addEventListener('click', e => { if(e.target===document.getElementById('modal-bg')) closeModal(); });
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+const TABS = ['today','dashboard','history'];
+document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+    document.querySelectorAll('.page').forEach((p,j)    => p.classList.toggle('active', j===i));
+    if (TABS[i]==='dashboard') renderDashboard();
+    if (TABS[i]==='history')   renderHistory();
+  });
+});
+
+/* ══════════════════════════════════════════
+   ADD CUSTOMER FORM
+══════════════════════════════════════════ */
+document.getElementById('btn-add-cust').addEventListener('click', () => {
+  document.getElementById('add-form').classList.add('open');
+  setTimeout(() => document.getElementById('inp-name').focus(), 80);
+});
+document.getElementById('btn-cancel-add').addEventListener('click', closeAddForm);
+document.getElementById('btn-save-add').addEventListener('click', addCustomer);
+document.getElementById('inp-name').addEventListener('keydown', e => { if(e.key==='Enter') addCustomer(); });
+
+function closeAddForm() {
+  document.getElementById('add-form').classList.remove('open');
+  document.getElementById('inp-name').value = '';
+}
+function addCustomer() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) { document.getElementById('inp-name').focus(); return; }
+  const key = todayKey();
+  if (!records[key]) records[key] = [];
+  records[key].push({ id: uid(), name, slice:0, medium:0, small:0 });
+  saveData(); closeAddForm(); renderToday();
+  toast('Customer added ✓');
+}
+
+/* ══════════════════════════════════════════
+   QTY UPDATE (exposed globally for inline onclick)
+══════════════════════════════════════════ */
+window.updateQty = function(id, prod, delta) {
+  const key = todayKey();
+  const c = (records[key]||[]).find(x => x.id===id);
+  if (!c) return;
+  c[prod] = Math.max(0, (c[prod]||0) + delta);
+  saveData(); renderToday();
+};
+
+/* ══════════════════════════════════════════
+   MARK PAID
+══════════════════════════════════════════ */
+window.markPaid = function(id) {
+  const key = todayKey();
+  const arr = records[key] || [];
+  const c = arr.find(x => x.id===id);
+  if (!c) return;
+  const t = total(c);
+  showModal(
+    'Mark as Paid',
+    `Move ${c.name} to Paid Log? Total: ${ngn(t)}`,
+    () => {
+      paidHistory.unshift({ id:uid(), name:c.name, date:key, slice:c.slice, medium:c.medium, small:c.small, total:t, paidAt:new Date().toISOString() });
+      records[key] = arr.filter(x => x.id!==id);
+      saveData(); renderToday();
+      toast(`${c.name} marked as paid ✓`);
+    }, 'Mark Paid', 'var(--green)'
+  );
+};
+
+/* ══════════════════════════════════════════
+   REMOVE CUSTOMER
+══════════════════════════════════════════ */
+window.removeCustomer = function(id) {
+  const key = todayKey();
+  const arr = records[key] || [];
+  const c = arr.find(x => x.id===id);
+  if (!c) return;
+  showModal(
+    'Remove Record',
+    `Permanently remove ${c.name} from today's list?`,
+    () => {
+      records[key] = arr.filter(x => x.id!==id);
+      saveData(); renderToday();
+      toast('Record removed');
+    }, 'Remove', 'var(--red)'
+  );
+};
+
+/* ══════════════════════════════════════════
+   RENDER TODAY
+══════════════════════════════════════════ */
+function renderToday() {
+  const key   = todayKey();
+  const custs = records[key] || [];
+
+  document.getElementById('lbl-date').textContent  = fmtDate(key);
+  document.getElementById('lbl-count').textContent = `${custs.length} customer${custs.length!==1?'s':''}`;
+
+  /* summary strip */
+  let totAmt=0, totSlice=0, totMed=0, totSm=0;
+  custs.forEach(c => { totAmt+=total(c); totSlice+=c.slice||0; totMed+=c.medium||0; totSm+=c.small||0; });
+  document.getElementById('s-total').textContent    = ngn(totAmt);
+  document.getElementById('s-custs').textContent    = custs.length;
+  document.getElementById('s-slice').textContent    = totSlice;
+  document.getElementById('s-medsmall').textContent = totMed + totSm;
+
+  const list = document.getElementById('cust-list');
+
+  if (custs.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🍞</div>
+        <div class="empty-text">No customers recorded yet today.<br>Tap <strong>Add Customer</strong> above to start.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = custs.map(c => {
+    const t  = total(c);
+    const sc = (c.slice||0)*PRICES.slice;
+    const mc = (c.medium||0)*PRICES.medium;
+    const lc = (c.small||0)*PRICES.small;
+    return `
+    <div class="cust-card">
+      <div class="cust-head">
+        <div class="cust-name">${esc(c.name)}</div>
+        <div class="cust-total">${ngn(t)}</div>
+      </div>
+
+      <!-- qty controls -->
+      <div class="prod-grid">
+        <div class="prod-col">
+          <div class="prod-name">Sliced<br><span style="font-size:9px;opacity:.7">₦1,500 each</span></div>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="updateQty('${c.id}','slice',-1)">−</button>
+            <span class="qty-val">${c.slice||0}</span>
+            <button class="qty-btn" onclick="updateQty('${c.id}','slice',1)">+</button>
+          </div>
+          <div class="prod-cost">${ngn(sc)}</div>
+        </div>
+        <div class="prod-col">
+          <div class="prod-name">Medium<br><span style="font-size:9px;opacity:.7">₦550 each</span></div>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="updateQty('${c.id}','medium',-1)">−</button>
+            <span class="qty-val">${c.medium||0}</span>
+            <button class="qty-btn" onclick="updateQty('${c.id}','medium',1)">+</button>
+          </div>
+          <div class="prod-cost">${ngn(mc)}</div>
+        </div>
+        <div class="prod-col">
+          <div class="prod-name">Small<br><span style="font-size:9px;opacity:.7">₦270 each</span></div>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="updateQty('${c.id}','small',-1)">−</button>
+            <span class="qty-val">${c.small||0}</span>
+            <button class="qty-btn" onclick="updateQty('${c.id}','small',1)">+</button>
+          </div>
+          <div class="prod-cost">${ngn(lc)}</div>
+        </div>
+      </div>
+
+      <!-- cost breakdown row -->
+      <div class="cost-row">
+        <div class="cost-cell">
+          <div class="cost-cell-lbl">Slice Cost</div>
+          <div class="cost-cell-val">${ngn(sc)}</div>
+        </div>
+        <div class="cost-cell">
+          <div class="cost-cell-lbl">Med Cost</div>
+          <div class="cost-cell-val">${ngn(mc)}</div>
+        </div>
+        <div class="cost-cell">
+          <div class="cost-cell-lbl">Small Cost</div>
+          <div class="cost-cell-val">${ngn(lc)}</div>
+        </div>
+      </div>
+
+      <!-- actions -->
+      <div class="cust-actions">
+        <button class="btn btn-green" onclick="markPaid('${c.id}')">✓ Mark as Paid</button>
+        <button class="btn btn-red"   onclick="removeCustomer('${c.id}')">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* day total bar */
+  list.innerHTML += `
+    <div class="day-total-bar">
+      <span class="day-total-lbl">Day Total</span>
+      <span class="day-total-val">${ngn(totAmt)}</span>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════
+   RENDER DASHBOARD
+══════════════════════════════════════════ */
+function renderDashboard() {
+  const key = todayKey();
+  const tc  = records[key] || [];
+
+  let tAmt=0, tSl=0, tMd=0, tSm=0;
+  tc.forEach(c => { tAmt+=total(c); tSl+=c.slice||0; tMd+=c.medium||0; tSm+=c.small||0; });
+  document.getElementById('d-today-amt').textContent = ngn(tAmt);
+  document.getElementById('d-today-sub').textContent = `${tc.length} customer${tc.length!==1?'s':''} outstanding`;
+  document.getElementById('d-today-sl').textContent  = tSl;
+  document.getElementById('d-today-md').textContent  = tMd;
+  document.getElementById('d-today-sm').textContent  = tSm;
+
+  /* all unpaid */
+  let aAmt=0, aSl=0, aMd=0, aSm=0, aCnt=0;
+  Object.values(records).forEach(arr => arr.forEach(c => {
+    aAmt+=total(c); aSl+=c.slice||0; aMd+=c.medium||0; aSm+=c.small||0; aCnt++;
+  }));
+  const days = Object.keys(records).filter(k => (records[k]||[]).length > 0).length;
+  document.getElementById('d-all-amt').textContent = ngn(aAmt);
+  document.getElementById('d-all-sub').textContent = `${aCnt} record${aCnt!==1?'s':''} across ${days} day${days!==1?'s':''}`;
+  document.getElementById('d-all-sl').textContent  = aSl;
+  document.getElementById('d-all-md').textContent  = aMd;
+  document.getElementById('d-all-sm').textContent  = aSm;
+
+  /* paid total */
+  const paidAmt = paidHistory.reduce((s,x) => s+(x.total||0), 0);
+  document.getElementById('d-paid-amt').textContent = ngn(paidAmt);
+}
+
+/* ══════════════════════════════════════════
+   RENDER HISTORY
+══════════════════════════════════════════ */
+function renderHistory() {
+  const list = document.getElementById('hist-list');
+  if (!paidHistory.length) {
+    list.innerHTML = `<div class="no-history">No paid records yet.<br>When customers pay, they'll appear here grouped by date.</div>`;
+    return;
+  }
+
+  /* group by date */
+  const groups = {};
+  paidHistory.forEach(h => { (groups[h.date] = groups[h.date]||[]).push(h); });
+  const dates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+
+  list.innerHTML = dates.map(date => {
+    const items    = groups[date];
+    const dayTotal = items.reduce((s,x) => s+(x.total||0), 0);
+    return `
+    <div class="day-group-hdr">${fmtShort(date)}</div>
+    ${items.map(h => `
+      <div class="hist-card">
+        <div class="hist-head">
+          <div>
+            <div class="hist-name">${esc(h.name)}</div>
+            <div class="hist-time">Paid at ${new Date(h.paidAt).toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div class="hist-amt">${ngn(h.total||0)}</div>
+        </div>
+        <div class="pill-row">
+          ${h.slice  ? `<span class="pill">🍞 ${h.slice} Sliced</span>` : ''}
+          ${h.medium ? `<span class="pill">🍞 ${h.medium} Medium</span>` : ''}
+          ${h.small  ? `<span class="pill">🍞 ${h.small} Small</span>` : ''}
+        </div>
+      </div>`).join('')}
+    <div class="day-paid-total">
+      <span>Day Paid Total</span>
+      <span>${ngn(dayTotal)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+loadData();
+renderToday();
+</script>
+</body>
+</html>
